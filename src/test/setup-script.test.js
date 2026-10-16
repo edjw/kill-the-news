@@ -66,6 +66,9 @@ if (args.slice(0, 4).join(" ") === "wrangler kv namespace list") {
     console.error(process.env.SETUP_LIST_ERROR);
     process.exit(1);
   }
+  if (process.env.SETUP_SKILLS_NOTICE && process.env.CI !== "true") {
+    console.log("Cloudflare agent skills are available for: Claude Code, Cursor, OpenCode, Codex.");
+  }
   console.log(process.env.SETUP_LIST_OUTPUT ?? fs.readFileSync("namespaces.json", "utf8"));
   process.exit(0);
 }
@@ -108,6 +111,13 @@ describe("setup script", () => {
     expect(config).toContain(`id = "${mainId}", preview_id = "${previewId}"`);
     expect(config).toContain('DOMAIN = "news.example.com"');
     expect(config).not.toContain("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+  });
+
+  it("lists namespaces without Wrangler's non-interactive skills notice", () => {
+    const result = runSetup({ CI: "", SETUP_SKILLS_NOTICE: "true" });
+
+    expect(result.stdout + result.stderr).toContain("Setup complete!");
+    expect(result.status).toBe(0);
   });
 
   it("reuses existing worker namespaces when setup is rerun", () => {

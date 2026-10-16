@@ -72,7 +72,8 @@ get_kv_namespace_ids() {
   echo "🔍 Retrieving KV namespace IDs..."
 
   local output
-  if ! output="$(npx wrangler kv namespace list)"; then
+  # Suppress Wrangler's skills notice so stdout contains only namespace JSON.
+  if ! output="$(CI=true npx wrangler kv namespace list)"; then
     echo "❌ Error listing KV namespaces. See the Wrangler error above."
     return 1
   fi

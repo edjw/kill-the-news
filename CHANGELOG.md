@@ -26,6 +26,8 @@ verbatim as the GitHub Release notes — so what you write here is what ships.
   now reads Wrangler's JSON correctly and matches explicit worker-prefixed
   titles instead of falling back to unrelated namespaces. Wrangler errors remain
   visible, and rerunning setup reuses namespaces with the expected titles.
+  The listing runs in CI mode so Wrangler's agent-skills notice cannot corrupt
+  the JSON output.
 - Per-feed favicons now resolve for senders on a subdomain that hosts no icon of
   its own (e.g. `mail.example.com`): the lookup walks up to the apex domain
   (`example.com`) and uses its favicon, caching it under the original sender
