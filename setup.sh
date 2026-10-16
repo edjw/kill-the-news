@@ -85,13 +85,6 @@ get_kv_namespace_ids() {
   MAIN_ID="$(printf '%s\n' "$ids" | sed -n '1p')"
   PREVIEW_ID="$(printf '%s\n' "$ids" | sed -n '2p')"
 
-  if [ -z "$MAIN_ID" ] || [ -z "$PREVIEW_ID" ]; then
-    echo "❌ Failed to extract KV namespace IDs. Please run manually:"
-    echo "npx wrangler kv namespace list"
-    echo "And update the IDs in wrangler.toml"
-    return 1
-  fi
-
   return 0
 }
 
@@ -106,12 +99,23 @@ create_kv_namespace() {
   fi
 }
 
-echo "🗄️ Creating KV namespaces..."
-create_kv_namespace "${WORKER_NAME}-EMAIL_STORAGE"
-create_kv_namespace "${WORKER_NAME}-EMAIL_STORAGE" --preview
+get_kv_namespace_ids
 
-if ! get_kv_namespace_ids; then
-  echo "❌ Setup cannot continue without KV namespace IDs."
+if [ -z "$MAIN_ID" ] || [ -z "$PREVIEW_ID" ]; then
+  echo "🗄️ Creating missing KV namespaces..."
+  if [ -z "$MAIN_ID" ]; then
+    create_kv_namespace "${WORKER_NAME}-EMAIL_STORAGE"
+  fi
+  if [ -z "$PREVIEW_ID" ]; then
+    create_kv_namespace "${WORKER_NAME}-EMAIL_STORAGE" --preview
+  fi
+  get_kv_namespace_ids
+fi
+
+if [ -z "$MAIN_ID" ] || [ -z "$PREVIEW_ID" ]; then
+  echo "❌ Failed to extract KV namespace IDs. Please run manually:"
+  echo "npx wrangler kv namespace list"
+  echo "And update the IDs in wrangler.toml"
   exit 1
 fi
 

@@ -30,7 +30,8 @@ verbatim as the GitHub Release notes — so what you write here is what ships.
   flag or reports that failure as an authentication problem. Namespace parsing
   now reads Wrangler's JSON correctly and matches explicit worker-prefixed
   titles instead of falling back to unrelated namespaces. Wrangler errors remain
-  visible, and rerunning setup reuses namespaces with the expected titles.
+  visible, and setup checks for existing namespaces before creating missing ones,
+  so reruns with both namespaces present do not require KV-create permission.
   The listing runs in CI mode so Wrangler's agent-skills notice cannot corrupt
   the JSON output.
 - Per-feed favicons now resolve for senders on a subdomain that hosts no icon of

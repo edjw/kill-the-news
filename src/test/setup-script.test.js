@@ -26,12 +26,13 @@ function runSetup(extraEnv = {}) {
     join(projectRoot, "wrangler-example.toml"),
     join(directory, "wrangler-example.toml"),
   );
-  if (extraEnv.SETUP_INITIAL_NAMESPACES) {
-    writeFileSync(
-      join(directory, "namespaces.json"),
-      extraEnv.SETUP_INITIAL_NAMESPACES,
-    );
-  }
+  writeFileSync(
+    join(directory, "namespaces.json"),
+    extraEnv.SETUP_INITIAL_NAMESPACES ??
+      JSON.stringify([
+        { title: "another-worker", id: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" },
+      ]),
+  );
   writeFileSync(join(bin, "npm"), "#!/bin/sh\nexit 0\n", { mode: 0o755 });
   writeFileSync(
     join(bin, "npx"),
@@ -41,11 +42,11 @@ const args = process.argv.slice(2);
 const command = args.slice(0, 4).join(" ");
 if (args.join(" ") === "wrangler whoami") process.exit(0);
 if (command === "wrangler kv namespace create") {
-  if (process.env.SETUP_CREATE_ERROR) {
+  const title = args[4] + (args.includes("--preview") ? "_preview" : "");
+  if (process.env.SETUP_CREATE_ERROR && title !== process.env.SETUP_CREATE_ALLOWED_TITLE) {
     console.error(process.env.SETUP_CREATE_ERROR);
     process.exit(1);
   }
-  const title = args[4] + (args.includes("--preview") ? "_preview" : "");
   const namespaces = fs.existsSync("namespaces.json")
     ? JSON.parse(fs.readFileSync("namespaces.json", "utf8"))
     : [{ title: "another-worker", id: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" }];
@@ -120,8 +121,9 @@ describe("setup script", () => {
     expect(result.status).toBe(0);
   });
 
-  it("reuses existing worker namespaces when setup is rerun", () => {
+  it("reuses existing namespaces without requiring permission to create them", () => {
     const result = runSetup({
+      SETUP_CREATE_ERROR: "Cloudflare API: permission denied",
       SETUP_INITIAL_NAMESPACES: JSON.stringify([
         { title: "unrelated", id: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" },
         { title: "kill-the-news-EMAIL_STORAGE_preview", id: previewId },
@@ -135,8 +137,37 @@ describe("setup script", () => {
     ).toContain(`id = "${mainId}", preview_id = "${previewId}"`);
   });
 
+  it.each([
+    [
+      "kill-the-news-EMAIL_STORAGE",
+      mainId,
+      "kill-the-news-EMAIL_STORAGE_preview",
+    ],
+    [
+      "kill-the-news-EMAIL_STORAGE_preview",
+      previewId,
+      "kill-the-news-EMAIL_STORAGE",
+    ],
+  ])(
+    "reuses %s and creates only its missing counterpart",
+    (title, id, missingTitle) => {
+      const result = runSetup({
+        SETUP_INITIAL_NAMESPACES: JSON.stringify([{ title, id }]),
+        SETUP_CREATE_ERROR:
+          "Cloudflare API: creation not allowed for this title",
+        SETUP_CREATE_ALLOWED_TITLE: missingTitle,
+      });
+
+      expect(result.status).toBe(0);
+      expect(
+        readFileSync(join(result.directory, "wrangler.toml"), "utf8"),
+      ).toContain(`id = "${mainId}", preview_id = "${previewId}"`);
+    },
+  );
+
   it("preserves Wrangler's listing error instead of blaming authentication", () => {
     const result = runSetup({
+      SETUP_CREATE_ERROR: "Namespace creation must not be attempted",
       SETUP_LIST_ERROR: "Cloudflare API: service unavailable",
     });
 

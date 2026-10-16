@@ -29,7 +29,7 @@ If your domain is not yet on Cloudflare: in the [Cloudflare dashboard](https://d
    The script will prompt for an admin password and your domain, then:
    - install npm dependencies
    - verify Cloudflare auth (`wrangler whoami`)
-   - create or reuse KV namespaces (`<worker>-EMAIL_STORAGE` and `<worker>-EMAIL_STORAGE_preview`) in your account
+   - look up KV namespaces (`<worker>-EMAIL_STORAGE` and `<worker>-EMAIL_STORAGE_preview`) in your account and create any that are missing
    - set the `ADMIN_PASSWORD` secret in the `production` environment
    - generate `wrangler.toml` from `wrangler-example.toml` with your KV IDs, domain, and today's compatibility date
 
