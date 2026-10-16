@@ -21,6 +21,11 @@ verbatim as the GitHub Release notes — so what you write here is what ships.
 
 ### Fixed
 
+- Setup no longer fails to list KV namespaces because of an unsupported `--json`
+  flag or reports that failure as an authentication problem. Namespace parsing
+  now reads Wrangler's JSON correctly and matches explicit worker-prefixed
+  titles instead of falling back to unrelated namespaces. Wrangler errors remain
+  visible, and rerunning setup reuses namespaces with the expected titles.
 - Per-feed favicons now resolve for senders on a subdomain that hosts no icon of
   its own (e.g. `mail.example.com`): the lookup walks up to the apex domain
   (`example.com`) and uses its favicon, caching it under the original sender
