@@ -4,7 +4,7 @@ How to set up, run, deploy, and configure kill-the-news. For an overview of what
 
 ## Requirements
 
-- Node.js 20+
+- Node.js 22+
 - A Cloudflare account (free plan works — Workers, KV, and Email Routing are all included)
 - A domain added to Cloudflare as a zone (DNS managed by Cloudflare)
 - A ForwardEmail account _(Option B only)_
